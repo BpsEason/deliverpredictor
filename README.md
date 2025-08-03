@@ -44,11 +44,11 @@ graph TD
     B -->|HTTP 回應| A
 
     %% 監控服務
-    D -->|錯誤追蹤| G[Sentry]
+    D -->|錯誤追蹤| G[Sentry 錯誤追蹤]
     E -->|錯誤追蹤| G
-    D -->|性能指標| H[Prometheus]
+    D -->|性能指標| H[Prometheus 性能指標收集]
     E -->|性能指標| H
-    H -->|視覺化| I[Grafana]
+    H -->|視覺化| I[Grafana 指標視覺化]
 
     %% 服務說明
     classDef service fill:#f9f,stroke:#333,stroke-width:2px;
