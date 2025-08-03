@@ -5,7 +5,7 @@
 ```mermaid
 graph TD
     %% 使用者訪問前端
-    A[使用者 (瀏覽器)] -->|HTTP 請求| B{Nginx 反向代理}
+    A[使用者 瀏覽器] -->|HTTP 請求| B{Nginx 反向代理}
 
     %% Nginx 路由請求
     B -->|前端請求 /| C[web-app: Vue 3 前端]
