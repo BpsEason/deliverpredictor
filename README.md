@@ -2,6 +2,39 @@
 
 **DeliverPredictor** 是一個基於微服務架構的配送風險預測系統，旨在通過分析外送員的歷史數據（如逾期次數、請假頻率、平均配送時間、評分等）生成風險分數，並提供是否替換外送員的建議。系統將前端展示、後端業務邏輯和機器學習預測分離，實現高效、可擴展的服務架構。
 
+```mermaid
+graph TD
+    %% 使用者訪問前端
+    A[使用者 (瀏覽器)] -->|HTTP 請求| B{Nginx 反向代理}
+
+    %% Nginx 路由請求
+    B -->|前端請求 /| C[web-app: Vue 3 前端]
+    B -->|API 請求 /api/*| D[api-server: Laravel 11 後端]
+
+    %% 前端與後端交互
+    C -->|發送 API 請求| D
+
+    %% 後端與 ML 服務交互
+    D -->|POST /predict| E[ml-api: FastAPI ML 服務]
+    E -->|返回預測結果| D
+
+    %% 後端與資料庫交互
+    D -->|CRUD 操作| F[MySQL 資料庫]
+
+    %% 監控服務
+    D -->|錯誤追蹤| G[Sentry]
+    E -->|錯誤追蹤| G
+    D -->|性能指標| H[Prometheus]
+    E -->|性能指標| H
+    H -->|視覺化| I[Grafana]
+
+    %% 服務說明
+    classDef service fill:#f9f,stroke:#333,stroke-width:2px;
+    class C,D,E,F service;
+    classDef monitor fill:#bbf,stroke:#333,stroke-width:2px;
+    class G,H,I monitor;
+```
+
 ## 專案亮點
 
 - **模組化微服務架構**：系統分為 `web-app`（前端）、`api-server`（後端）和 `ml-api`（機器學習服務），各服務獨立開發與部署，確保靈活性與可維護性。
