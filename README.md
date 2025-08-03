@@ -13,6 +13,7 @@ graph TD
 
     %% 前端與後端交互
     C -->|發送 API 請求| D
+    D -->|回傳 API 回應| C
 
     %% 後端與 ML 服務交互
     D -->|POST /predict| E[ml-api: FastAPI ML 服務]
@@ -20,6 +21,10 @@ graph TD
 
     %% 後端與資料庫交互
     D -->|CRUD 操作| F[MySQL 資料庫]
+
+    %% 回應給使用者
+    C -->|渲染頁面與數據| B
+    B -->|HTTP 回應| A
 
     %% 監控服務
     D -->|錯誤追蹤| G[Sentry]
