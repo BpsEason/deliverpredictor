@@ -2,6 +2,23 @@
 
 **DeliverPredictor** 是一個基於微服務架構的配送風險預測系統，旨在通過分析外送員的歷史數據（如逾期次數、請假頻率、平均配送時間、評分等）生成風險分數，並提供是否替換外送員的建議。系統將前端展示、後端業務邏輯和機器學習預測分離，實現高效、可擴展的服務架構。
 
+## 專案亮點
+
+- **模組化微服務架構**：系統分為 `web-app`（前端）、`api-server`（後端）和 `ml-api`（機器學習服務），各服務獨立開發與部署，確保靈活性與可維護性。
+- **現代化技術棧**：
+  - **前端**：Vue 3、Pinia、Vite、Chart.js，提供流暢的用戶體驗與數據視覺化。
+  - **後端**：Laravel 11、PHP 8.2+、MySQL，實現穩定的業務邏輯與數據管理。
+  - **機器學習**：FastAPI、Python 3.9+、Scikit-learn，提供高效的風險預測功能。
+- **容器化部署**：使用 Docker Compose 實現一鍵部署，支援多平台（Linux/amd64、Linux/arm64）。
+- **監控與 CI/CD**：
+  - 整合 Sentry 進行錯誤追蹤，Prometheus 收集性能指標。
+  - GitHub Actions 實現自動化測試與容器映像構建，確保程式碼品質。
+- **可擴展性**：支援未來新增功能，如 Laravel Reverb 實時通訊或更複雜的 ML 模型。
+
+## 系統架構
+
+以下是系統架構圖，使用 Mermaid 語法繪製，展示各服務之間的交互流程：
+
 ```mermaid
 graph TD
     %% 使用者訪問前端
@@ -40,26 +57,12 @@ graph TD
     class G,H,I monitor;
 ```
 
-## 專案亮點
-
-- **模組化微服務架構**：系統分為 `web-app`（前端）、`api-server`（後端）和 `ml-api`（機器學習服務），各服務獨立開發與部署，確保靈活性與可維護性。
-- **現代化技術棧**：
-  - **前端**：Vue 3、Pinia、Vite、Chart.js，提供流暢的用戶體驗與數據視覺化。
-  - **後端**：Laravel 11、PHP 8.2+、MySQL，實現穩定的業務邏輯與數據管理。
-  - **機器學習**：FastAPI、Scikit-learn、Python 3.9+，提供高效的風險預測功能。
-- **容器化部署**：使用 Docker Compose 實現一鍵部署，支援多平台（Linux/amd64、Linux/arm64）。
-- **監控與 CI/CD**：
-  - 整合 Sentry 進行錯誤追蹤，Prometheus 收集性能指標。
-  - GitHub Actions 實現自動化測試與容器映像構建，確保程式碼品質。
-- **可擴展性**：支援未來新增功能，如 Laravel Reverb 實時通訊或更複雜的 ML 模型。
-
-## 系統架構
-
-- **web-app**：前端介面，使用 Vue 3 構建，提供風險預測的儀表板，與後端 API 交互。
-- **api-server**：後端服務，使用 Laravel 11，負責業務邏輯、資料庫操作及與 `ml-api` 的通訊。
-- **ml-api**：機器學習服務，使用 FastAPI，載入預訓練模型並提供風險預測 API。
-- **Nginx**：反向代理，負責路由前端與後端請求。
-- **MySQL**：儲存外送員數據與系統設定。
+**架構說明**：
+- **使用者** 通過瀏覽器發送 HTTP 請求至 `Nginx`，由其分發至 `web-app` 或 `api-server`。
+- **web-app** 負責前端渲染，通過 API 與 `api-server` 交互。
+- **api-server** 處理業務邏輯，與 `ml-api` 通信以獲取風險預測，並與 `MySQL` 進行數據操作。
+- **ml-api** 使用預訓練模型進行風險預測。
+- **監控服務**（Sentry、Prometheus、Grafana）收集錯誤和性能指標。
 
 ## 技術棧
 
@@ -112,7 +115,7 @@ class PredictController extends Controller
 }
 ```
 
-**說明**：此控制器負責接收前端的預測請求，將數據轉發給 `ml-api` 的 `/predict` 端點，並處理回應或錯誤。
+**說明**：此控制器接收前端的預測請求，轉發給 `ml-api` 的 `/predict` 端點，並處理回應或錯誤。
 
 ### 2. 機器學習服務：`ml-api/main.py`
 
@@ -287,6 +290,63 @@ watch(() => store.predictionResult, (newResult) => {
   - `SENTRY_DSN`：若使用 Sentry，設置監控 DSN。
   - `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`：MySQL 連線資訊。
 - 在 `docker-compose.yml` 中設置 `SENTRY_DSN_SECRET`。
+
+## 常見問題與解答
+
+以下是開發者可能遇到的常見問題及其解答，幫助快速理解與使用專案。
+
+### 1. 如何新增更多的外送員數據？
+   - **解答**：外送員數據儲存在 `api-server` 的 MySQL 資料庫中，表名為 `couriers`。可通過以下方式新增數據：
+     - 使用 Laravel 的 Seeder：編輯 `api-server/database/seeders/CouriersTableSeeder.php`，新增數據並運行：
+       ```bash
+       docker-compose exec api-server php artisan db:seed
+       ```
+     - 直接操作資料庫：連線到 MySQL（`docker-compose exec mysql mysql -u root -p`），插入數據到 `couriers` 表。
+     - 未來可開發 API 端點（如 `POST /api/couriers`）以支援前端新增數據。
+
+### 2. 如何訓練新的 ML 模型？
+   - **解答**：ML 模型訓練程式碼位於 `ml-api/train.py` 和 `ml-api/notebooks/training.ipynb`。步驟如下：
+     1. 修改 `train.py` 或 `training.ipynb` 中的數據集（目前為簡單假數據）。
+     2. 運行訓練腳本：
+        ```bash
+        docker-compose exec ml-api python train.py
+        ```
+     3. 新生成的 `model.pkl` 會自動被 `ml-api/main.py` 載入。
+     - 建議使用 Jupyter Notebook（`training.ipynb`）進行實驗，支援互動式數據分析與模型調參。
+
+### 3. 如果 API 請求失敗，如何排查？
+   - **解答**：
+     - 檢查 `api-server` 日誌：`api-server/storage/logs/laravel.log`。
+     - 檢查 `ml-api` 是否運行正常：`docker-compose logs ml-api`。
+     - 確保環境變數正確（`api-server/.env` 中的 `DB_HOST` 和 `docker-compose.yml` 中的服務連線）。
+     - 使用 Sentry 查看錯誤詳情（若已配置 `SENTRY_DSN`）。
+     - 測試 API 端點：使用工具如 Postman 發送 `POST http://localhost:80/api/predict`。
+
+### 4. 如何自訂前端儀表板的顯示？
+   - **解答**：前端儀表板位於 `web-app/src/views/Dashboard.vue`。可修改：
+     - **樣式**：調整 `<style>` 區塊或新增 CSS 檔案。
+     - **圖表**：修改 `createChart` 函數，使用 Chart.js 的其他圖表類型（如柱狀圖）。
+     - **數據**：在 `web-app/src/store/useCourierStore.js` 中修改 `fetchPrediction` 函數，調整 API 請求參數。
+     - 重新構建前端：`cd web-app && npm run build`。
+
+### 5. 如何擴展監控功能？
+   - **解答**：
+     - **Prometheus**：編輯 `api-server/app/Http/Controllers/MetricsController.php` 和 `ml-api/main.py`，新增更多指標（如 API 延遲）。
+     - **Grafana**：修改 `grafana/dashboard.json`，新增面板以視覺化新指標。
+     - **Sentry**：確保 `SENTRY_DSN` 已配置，檢查 Sentry 儀表板以查看錯誤趨勢。
+     - 可考慮新增其他監控工具（如 ELK Stack）以收集日誌。
+
+### 6. 如何部署到生產環境？
+   - **解答**：
+     1. 更新 `docker-compose.yml` 中的映像標籤（`yourdockerhub/deliverpredictor-*`）並推送至 Docker Hub：
+        ```bash
+        docker-compose build
+        docker-compose push
+        ```
+     2. 在生產伺服器上配置環境變數（特別是 `APP_KEY` 和 `SENTRY_DSN`）。
+     3. 使用 `docker-compose up -d` 部署。
+     4. 設定反向代理（如 Nginx 或 Traefik）以處理外部流量。
+     - 建議使用 Kubernetes 或 ECS 進行容器編排，以支援高可用性。
 
 ## 未來改進
 
